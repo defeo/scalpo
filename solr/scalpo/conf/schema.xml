@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
-<schema name="remacle" version="1.1">
+<schema name="scalpo" version="1.1">
   <types>
     <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
 

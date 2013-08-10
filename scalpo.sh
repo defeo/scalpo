@@ -12,8 +12,8 @@ case "$1" in
 	scrapy crawl "$2" -o "$2.json" -t json
 	;;
     index)
-	curl "http://localhost:$port/solr/remacle/update?wt=json" --data-binary @"$2.json" -H 'Content-type:application/json'
-	curl "http://localhost:$port/solr/remacle/update?softCommit=true"
+	curl "http://localhost:$port/solr/scalpo/update?wt=json" --data-binary @"$2.json" -H 'Content-type:application/json'
+	curl "http://localhost:$port/solr/scalpo/update?softCommit=true"
 	;;
     *)
 	echo "Usage: scalpo.sh jetty|index|crawl [source]"
