@@ -2,50 +2,49 @@
 
 <schema name="remacle" version="1.1">
   <types>
-    <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
     <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
 
-    <!-- A general text field that has reasonable, generic
-         cross-language defaults: it tokenizes with StandardTokenizer,
-	 removes stop words from case-insensitive "stopwords.txt"
-	 (empty by default), and down cases.  At query time only, it
-	 also applies synonyms. -->
-    <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
-      <analyzer type="index">
-        <tokenizer class="solr.StandardTokenizerFactory"/>
-        <!--filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" /-->
-        <!-- in this example, we will only use synonyms at query time
-        <filter class="solr.SynonymFilterFactory" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
-        -->
-        <filter class="solr.LowerCaseFilterFactory"/>
+    <fieldType name="url" class="solr.TextField">
+      <analyzer>
+        <tokenizer class="solr.LowerCaseTokenizerFactory"/>
       </analyzer>
-      <analyzer type="query">
+    </fieldType>
+
+    <fieldType name="text_general" class="solr.TextField" positionIncrementGap="0" sortMissingLast="true">
+      <analyzer>
         <tokenizer class="solr.StandardTokenizerFactory"/>
-        <!--filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords.txt" />
-        <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/-->
+	<!-- For latin script text:
+	     - lowercase,
+	     - remove diacritics,
+	     - remove elisions.
+	     We use no stemming because it could be French or Latin or who knows what.
+	-->
         <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.ASCIIFoldingFilterFactory"/>
+	<filter class="solr.ElisionFilterFactory"/>
+	<!-- For Greek text:
+	     - lowercase,
+	     - remove diacritics (although I doubt it will remove breathings)
+	     - stemming (modern Greek is not that different from ancient Greek :)
+	-->
+	<filter class="solr.GreekLowerCaseFilterFactory"/>
+	<filter class="solr.GreekStemFilterFactory"/>
       </analyzer>
     </fieldType>
   </types>
 
- <fields>   
-  <!-- general -->
-  <field name="url"       type="text_general"    indexed="true"  stored="true"  multiValued="false" required="true"/>
-  <field name="title"     type="text_general"    indexed="true"  stored="true"  multiValued="false" /> 
-  <field name="text"      type="text_general"    indexed="true"  stored="true"  multiValued="true" /> 
-  <field name="author"    type="text_general"    indexed="true"  stored="true"  multiValued="false" />
-  <field name="work"      type="text_general"    indexed="true"  stored="true"  multiValued="false" />
-  <field name="category"  type="text_general"    indexed="true"  stored="true"  multiValued="false" />
-  <field name="_version_" type="long"            indexed="true"  stored="true"/>
- </fields>
+  <fields>   
+    <field name="url"       type="url"             indexed="true"  stored="true"  multiValued="false" required="true"/>
+    <field name="title"     type="text_general"    indexed="true"  stored="true"  multiValued="false" /> 
+    <field name="text"      type="text_general"    indexed="true"  stored="true"  multiValued="true" /> 
+    <field name="author"    type="text_general"    indexed="true"  stored="true"  multiValued="false" />
+    <field name="work"      type="text_general"    indexed="true"  stored="true"  multiValued="false" />
+    <field name="category"  type="text_general"    indexed="true"  stored="true"  multiValued="false" />
+    <field name="_version_" type="long"            indexed="true"  stored="true"/>
+  </fields>
 
- <!-- field to use to determine and enforce document uniqueness. -->
- <uniqueKey>url</uniqueKey>
-
- <!-- field for the QueryParser to use when an explicit fieldname is absent -->
- <defaultSearchField>text</defaultSearchField>
-
- <!-- SolrQueryParser configuration: defaultOperator="AND|OR" -->
- <solrQueryParser defaultOperator="OR"/>
+  <uniqueKey>url</uniqueKey>
+  <defaultSearchField>text</defaultSearchField>
+  <solrQueryParser defaultOperator="OR"/>
 </schema>
 

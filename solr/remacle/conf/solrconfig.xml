@@ -24,12 +24,12 @@
 
        <!-- Highlighting defaults -->
        <str name="hl">on</str>
-       <str name="hl.fl">block</str>
+       <str name="hl.fl">text</str>
        <str name="hl.encoder">html</str>
        <str name="hl.simple.pre">&lt;b&gt;</str>
        <str name="hl.simple.post">&lt;/b&gt;</str>
-       <str name="f.block.hl.fragsize">100</str>
-       <str name="f.block.hl.alternateField">block</str>
+       <str name="f.text.hl.fragsize">100</str>
+       <str name="f.text.hl.alternateField">text</str>
      </lst>
     </requestHandler>
 
