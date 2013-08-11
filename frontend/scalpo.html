@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Scalpo: an ancient texts indexing project</title>
+
+    <style>
+      #query-area {
+        border-bottom: solid thin black;
+        padding: 1ex;
+      }
+      #query { 
+        height: 3em;
+        width: 60%;
+        font-size: 12pt;
+        vertical-align: top;
+      }
+      #select { height: 3em; }
+
+      #result-area { padding: 1ex }
+      #reshead {
+        text-align: right;
+        border-bottom: solid thin black;
+      }
+      #pagination a {
+        margin: 0 1ex;
+      }
+
+      .result { border-bottom: solid thin gray }
+      .result p { padding: 0 1ex }
+      .snippet em { background-color: yellow }
+
+      .preview, .author, .work, .category, .popup li {
+        position: relative;
+        color: #88f;
+        cursor: pointer;
+        margin-right: 10px;
+      }
+      .author:before, .category:before, .category:after,
+      .preview:before, .preview:after, .work:before {
+        color: black;
+        cursor: auto;
+      }
+      .category {
+        font-size: 60%;
+      }
+      .author:before  { content: "Author: " }
+      .category:before, .preview:before { content: "(" }
+      .category:after, .preview:after  { content: ")" }
+      .work:before    { content: "Work: " }
+      .preview:hover, .popup li:hover { text-decoration: underline }
+
+      .fulltext {
+        position: absolute;
+        width: 80%;
+        max-height: 70%;
+        left: 10%;
+        background-color: white;
+        border: solid thin black;
+        box-shadow: 0 0 8px 8px #eee;
+        overflow: auto;
+        display: none;
+        z-index: 2;
+      }
+      .popup {
+        display: none;
+        position: absolute;
+        top: -1em;
+        left: 0;
+        width: 25em;
+        z-index: 1;
+        background-color: white;
+        border-radius: 4px;
+        box-shadow: 0 0 4px 4px #eee;
+      }
+    </style>
+
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="scalpo.js"></script>
+  </head>
+  <body>
+    <div id="query-area">
+      <textarea id="query">homere -author:homere -work:homere -url:'table.htm' -Ubuntu</textarea>
+      <button id="select">Search!</button>
+    </div>
+    
+    <div id="result-area">
+      <div id="pagination"></div>
+      <div id="reshead"></div>
+      <div id="results"></div>
+    </div>
+  </body>
+</html>
