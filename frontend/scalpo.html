@@ -15,7 +15,24 @@
         font-size: 12pt;
         vertical-align: top;
       }
-      #select { height: 3em; }
+      #select { height: 3em; position: relative }
+      #select.loading #loader { display: inline }
+      #select.loading span { display: none }
+      #loader {
+        display: none;
+        animation: loading 2s infinite linear;
+        -webkit-animation: loading 2s infinite linear;
+      }
+      @keyframes loading {
+        from { transform: rotate(0deg) }
+        to { transform: rotate(360deg) }
+      }
+      @-webkit-keyframes loading {
+        from { -webkit-transform: rotate(0deg) }
+        to { -webkit-transform: rotate(360deg) }
+      }
+
+      #msg { color: red }
 
       #result-area { padding: 1ex }
       #reshead {
@@ -28,7 +45,16 @@
 
       .result { border-bottom: solid thin gray }
       .result p { padding: 0 1ex }
+
       .snippet em { background-color: yellow }
+      .snip-show, .snip-hide {
+        font-size: 130%;
+        margin: 0 20px;
+        color: #88f;
+        cursor: pointer;
+      }
+      .snip-show:before { content: "↑" }
+      .snip-hide:before { content: "↓" }
 
       .preview, .author, .work, .category, .popup li {
         position: relative;
@@ -80,13 +106,18 @@
   </head>
   <body>
     <div id="query-area">
-      <textarea id="query">homere -author:homere -work:homere -url:'table.htm' -Ubuntu</textarea>
-      <button id="select">Search!</button>
+      <textarea id="query">homere -author:homere -url:'table.htm'</textarea>
+      <button id="select">
+	<img id="loader" height="32" width="32"
+	     src="https://cdn1.iconfinder.com/data/icons/free-mobile-icon-kit/32/Loading_throbber.png">
+	<span>Search!</span>
+      </button>
+      <div id="msg"></div>
     </div>
     
     <div id="result-area">
       <div id="pagination"></div>
-      <div id="reshead"></div>
+      <div id="reshead"><span class="text"></span></div>
       <div id="results"></div>
     </div>
   </body>
