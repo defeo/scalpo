@@ -94,24 +94,27 @@ $(function() {
 	var meta = $('<h3>')
 	    .append(
 		$.map(['author', 'category', 'work'], function(key) {
-		    var popup = $('<div class="popup"><ul>' +
+		    var popup = '';
+		    if (doc[key]) {
+			popup = $('<div class="popup"><ul>' +
 				  '<li class="popup-more">show results by ' + key + ' <em>' 
 				  + doc[key] + '</em></li>' +
 				  '<li class="popup-less">exclude results by ' + key + ' <em>' 
 				  + doc[key] + '</em></li>' +
 				  '</ul></div>');
-		    popup
-			.on('mouseleave', function() {
-			    $(this).hide()
-			})
-			.on('click', 'li', function(e) {
-			    var mod = this.className == 'popup-less' ? '-' : '+';
-			    $q = $('#query');
-			    $q.val($q.val() + ' ' + mod + key + ':' + doc[key]);
-			    popup.hide();
-			});
+			popup
+			    .on('mouseleave', function() {
+				$(this).hide()
+			    })
+			    .on('click', 'li', function(e) {
+				var mod = this.className == 'popup-less' ? '-' : '+';
+				$q = $('#query');
+				$q.val($q.val() + ' ' + mod + key + ':' + doc[key]);
+				popup.hide();
+			    });
+		    }
 
-		    return $('<span class="' + key + '">' + doc[key] + '</span>')
+		    return $('<span class="' + key + '">' + (doc[key] || ' ') + '</span>')
 			.prepend(popup)
 			.on('mouseenter', function() {
 			    popup.show();
