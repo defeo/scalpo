@@ -12,3 +12,5 @@ class ScalpoItem(Item):
     author = Field()
     work = Field()
     category = Field()
+    section = Field()
+    source = Field()
