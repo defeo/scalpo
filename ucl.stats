@@ -1,0 +1,15 @@
+2013-08-13 05:09:52+0200 [ucl] INFO: Dumping spider stats:
+	{'downloader/request_bytes': 18421960,
+	 'downloader/request_count': 56975,
+	 'downloader/request_method_count/GET': 56975,
+	 'downloader/response_bytes': 1984309847,
+	 'downloader/response_count': 56975,
+	 'downloader/response_status_count/200': 56970,
+	 'downloader/response_status_count/404': 5,
+	 'finish_reason': 'finished',
+	 'finish_time': datetime.datetime(2013, 8, 13, 3, 9, 52, 628171),
+	 'item_scraped_count': 54007,
+	 'request_depth_max': 2,
+	 'scheduler/memory_enqueued': 56975,
+	 'spider_exceptions/AttributeError': 1,
+	 'start_time': datetime.datetime(2013, 8, 13, 2, 7, 9, 255455)}
