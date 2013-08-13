@@ -1,22 +1,77 @@
 $(function() {
-    var config = {
-	url :         'http://proust.prism.uvsq.fr:2401/solr',
-	core:         'scalpo',
-	rows:          50
-    };
+    // Remove all listeners first
+    $('*').off('.scalpo')
 
-    var semaphore = false;
+    // Controls for editing the config parameters from the UI
+    $('#config')
+	.empty()
+	.append($.map(scalpo.config, function(v, k) {
+	    return $('<div>')
+		.append('<label for="config-' + k + '">' + k +'</label>')
+		.append($('<input id="config-' + k + '" type="text">')
+			.data('key', k)
+			.data('type', typeof v)
+			.val(v));
+	}))
+	.append('<div><a id="reload-js" href="#">reload .js</a></div>')
+	.on('change.scalpo', 'input', function(e) {
+	    $this = $(this);
+	    types = {
+		number: Number,
+		string: String,
+		boolean: Boolean
+	    };
+	    scalpo.config[$this.data('key')] = types[$this.data('type')]($this.val());
+	})
+	.on('click.scalpo', '#reload-js', function() {
+	    $.getScript('scalpo.js');
+	    return false;
+	});
 
-    $(window).on('popstate', function(e) {
+    // Handle history
+    $(window).on('popstate.scalpo', function(e) {
 	$('#query').val(e.originalEvent.state.query);
     });
-
-    $('#select').click(function() { query(0) });
     
-    $('#pagination').on('click', 'a', function() {
+    // Query launchers
+    $('#select').on('click.scalpo', function() { query(0) });
+    
+    $('#pagination').on('click.scalpo', 'a', function() {
 	query(+$(this).data('start'));
 	return false;
     });
+
+    // Events on search results
+    $('#results')
+    // toggle preview
+	.on('click.scalpo', '.preview', function() { 
+	    $(this).data('fulltext').show(); 
+	})
+	.on('click.scalpo', '.fulltext', function() {
+	    $(this).hide();
+	})
+    // meta keyword popups
+	.on('mouseenter.scalpo', '.meta', function() {
+	    $(this).data('popup').show();
+	})
+	.on('mouseleave.scalpo', '.popup', function() {
+	    $(this).hide();
+	})
+	.on('click.scalpo', '.popup li', function(e) {
+	    var mod = this.className == 'popup-less' ? '-' : '+';
+	    popup = $(this).parent().parent()
+	    $q = $('#query');
+	    $q.val($q.val() + ' ' + mod + popup.data('key') + ':"' + popup.data('val') + '"');
+	    popup.hide();
+	})
+    // toggle snippet
+	.on('click.scalpo', '.snip-show, .snip-hide', function() {
+	    $(this)
+		.toggleClass('snip-show snip-hide')
+		.parent().parent().find('.snippet').toggle('fast');
+	});
+
+    var semaphore = false;
 
     function query (start) {
 	if (!semaphore) {
@@ -25,18 +80,18 @@ $(function() {
 	    var query = $('#query').val()
 	    history.pushState({ query: query }, query)
 
-	    $('#query, #select')
+	    $('input, button')
 		.prop('disabled', true)
 		.toggleClass('loading');
 	    $('#msg').empty()
 
 	    $.ajax({
-		url: config.url + '/' + config.core + '/select',
+		url: scalpo.config.url + '/' + scalpo.config.core + '/select',
 		data: {
 		    wt   : 'json',
 		    q    : query,
 		    start: start,
-		    rows : config.rows
+		    rows : scalpo.config.rows
 		},
 		dataType: 'jsonp',
 		jsonp: 'json.wrf',
@@ -50,9 +105,9 @@ $(function() {
 				  'showing results ' + start + '-' + (start + num) + '.');
 			
 			var $pag = $('#pagination').html('Go to results: ')
-			for (var i = 0 ; i <= tot ; i += config.rows) {
+			for (var i = 0 ; i <= tot ; i += scalpo.config.rows) {
 			    $pag.append('<a href="#" data-start="' + i + '">' + i + '-' + 
-					Math.min(i + config.rows, tot) + '</a> ');
+					Math.min(i + scalpo.config.rows, tot) + '</a> ');
 			}
 
 			$('#results').html(
@@ -68,7 +123,7 @@ $(function() {
 		    $('#msg').html('Hmmm, 20s and no reply... This might be an error. Correct your query and try again, or try reloading the page.')
 		},
 		complete: function() {
-		    $('#query, #select')
+		    $('input, button')
 			.prop('disabled', false)
 			.toggleClass('loading');
 		    semaphore = false;
@@ -77,61 +132,45 @@ $(function() {
 	}
     }
 
+    // This function constructs a block holding one search result
     function result(pos, doc, highlight) {
-	var result = $('<div id="result-' + pos + '" class="result">');
-
 	var fulltext = $('<p class="fulltext">' + doc.text.join(' ') + '</p>')
-	    .click(function() { $(this).hide(); });
 
-	var title = $('<h2 class="title">' + doc.title + '</h2>');
-
-	var preview = $('<span class="preview">preview</span>')
-	    .click(function() { fulltext.show(); });
-
-	var link = $('<h3><a target="_blank" href="' + doc.url + '">' + doc.url + '</a></h3>')
-	    .append(preview);
-
-	var meta = $('<h3>')
-	    .append(
-		$.map(['author', 'category', 'work'], function(key) {
-		    var popup = '';
-		    if (doc[key]) {
-			popup = $('<div class="popup"><ul>' +
-				  '<li class="popup-more">show results by ' + key + ' <em>' 
-				  + doc[key] + '</em></li>' +
-				  '<li class="popup-less">exclude results by ' + key + ' <em>' 
-				  + doc[key] + '</em></li>' +
-				  '</ul></div>');
-			popup
-			    .on('mouseleave', function() {
-				$(this).hide()
-			    })
-			    .on('click', 'li', function(e) {
-				var mod = this.className == 'popup-less' ? '-' : '+';
-				$q = $('#query');
-				$q.val($q.val() + ' ' + mod + key + ':' + doc[key]);
-				popup.hide();
-			    });
-		    }
-
-		    return $('<span class="' + key + '">' + (doc[key] || ' ') + '</span>')
-			.prepend(popup)
-			.on('mouseenter', function() {
-			    popup.show();
-			});
-		}))
-	    .append(
-		$('<span class="snip-show">').click(function() {
-		    $(this)
-			.toggleClass('snip-show snip-hide')
-			.parent().parent().find('.snippet').toggle('fast');
-		}));
-
-	return result
+	return $('<div id="result-' + pos + '" class="result">')
+	// The full text of the result (constructed earlier)
 	    .append(fulltext)
-	    .append(title)
-	    .append(link)
-	    .append(meta)
+	// The title text
+	    .append('<h2 class="title">' + doc.title + '</h2>')
+	// The link to the source and the preview widget
+	    .append($('<h3><a target="_blank" href="' + doc.url + '">' + doc.url + '</a></h3>')
+		    .append($(' <span class="preview">preview</span>')
+			    .data('fulltext', fulltext)))
+	// The metadata (category, author, work, section) and collapse widget
+	    .append($('<h3>')
+		    .append($.map(['author', 'category', 'work', 'section'], function(key) {
+			var popup = $();
+			if (doc[key]) {
+			    popup = $('<div class="popup"><ul>' +
+				      '<li class="popup-more">show results by ' + key + ' <em>' 
+				      + doc[key] + '</em></li>' +
+				      '<li class="popup-less">exclude results by ' + key + ' <em>' 
+				      + doc[key] + '</em></li>' +
+				      '</ul></div>')
+				.data('key', key)
+				.data('val', doc[key]);
+			}
+
+			return $('<span class="meta ' + key + '">' + (doc[key] || ' ') + '</span>')
+			    .prepend(popup)
+			    .data('popup', popup);
+		    }))
+		    .append($('<span class="snip-show">')))
+	// The source (if present)
+	    .append(doc.source
+		    ? ('<h4>Source: <a target="_blank" href="' 
+		       + doc.source + '">' + doc.source + '</a></h4>')
+		    : null)
+	// The snippets
 	    .append($.map(highlight[doc.url].text, function(sn) {
 		return $('<p class="snippet">'+sn+'</p>');
 	    }));
