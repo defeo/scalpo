@@ -51,8 +51,7 @@ class UCLSpider(BaseSpider):
     '''
     This spider crawls the two hypertext databases "Itinera
     electronica" and "Oδoι ελεκτρoνικαι" hosted by UCL. It leverages
-    their (seemingly?) machine-generated structure to extract
-    metadata.
+    their fairly regular structure to extract metadata.
     '''
 
     name = 'ucl'
@@ -62,18 +61,94 @@ class UCLSpider(BaseSpider):
     allowed_domains = [server + '.fltr.ucl.ac.be' 
                        for server in ('agoraclass', 'mercure', 'pot-pourri')]
 
-    def stringify(self, x):
-        t = x.extract()
-        if isinstance(t, list):
-            t = ' '.join(t)
-        return t.strip(' \r\n\t')
-
     def start_requests(self):
+        'The two start pages'
         return [
             Request('http://agoraclass.fltr.ucl.ac.be/concordances/intro.htm',
-                    meta={'category': 'itinera'}, callback=self.parse_intro),
+                    meta={'category': 'itinera'}, callback=self.parse_intro,
+                    errback=self.errback),
             Request('http://mercure.fltr.ucl.ac.be/Hodoi/concordances/intro.htm',
-                    meta={'category': 'hodoi'}, callback=self.parse_intro)]
+                    meta={'category': 'hodoi'}, callback=self.parse_intro,
+                    errback=self.errback)
+            ]
+
+    def stringify(self, x):
+        'facility to convert XPath objexts to strings'
+        t = x.extract()
+        return ' '.join(x.strip(' \r\n\t') for x in t)
+
+    def urlgen(self, base, url=None):
+        'facility to generate and correct urls'
+        base = base.strip()
+        # join paths
+        if url is not None:
+            url = url.strip()
+            # fix paths which are directory names
+            if not (base[-1] == '/'
+                    or base[-4] == '.'):
+                base += '/'
+            url = urljoin(base, url)
+        else:
+            url = base
+
+        # broken url fixes
+
+        broken = {
+            'http://agoraclass.fltr.ucl.ac.be/concordances/varron_de_agricultura_03/lecture/7htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/varron_de_agricultura_03/lecture/7.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/quintilianus_instit_lv04/lecture/11,htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/quintilianus_instit_lv04/lecture/11.htm',
+            'http://mercure.fltr.ucl.ac.be/Hodoi/concordances/plutarque_opinions_phil_04/lecture/default.htm':
+                'http://mercure.fltr.ucl.ac.be/Hodoi/concordances/plutarque_opinions_phil_04%20-%20Copie/lecture/default.htm',
+            'http://mercure.fltr.ucl.ac.be/Hodoi/concordances/platon_republique_1/lecture/default.htm':
+                'http://mercure.fltr.ucl.ac.be/Hodoi/concordances/platon_republique_01/lecture/default.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/commodien_instruc_01/lecture/89.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/commodien_instruc_01/lecture/29.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/cicero_de_inuentione_02/lecture/89.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/cicero_de_inuentione_02/lecture/29.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/cicero_de_inuentione_01/lecture/89.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/cicero_de_inuentione_01/lecture/29.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/cassiodore_var_01_20&25/lecture/default.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/cassiodore_var_01_20_25/lecture/default.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_serrmons_150/lecture/default.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_sermons_150/lecture/default.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_serrmons_136/lecture/default.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_sermons_136/lecture/default.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_civ_dei_16/lecture/89.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_civ_dei_16/lecture/29.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_civ_dei_18/lecture/89.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_civ_dei_18/lecture/29.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_civ_dei_20/lecture/89.htm':
+                'http://agoraclass.fltr.ucl.ac.be/concordances/augustin_civ_dei_20/lecture/29.htm',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/bacon_de_sap_vet_10.txt':
+                'http://pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/de_sap_vet_10.txt',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/bacon_de_sap_vet_10_fr.txt':
+                'http://pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/de_sap_vet_10_fr.txt',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/bacon_de_sap_vet_27.txt':
+                'http://pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/de_sap_vet_27.txt',
+            'http://agoraclass.fltr.ucl.ac.be/concordances/pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/bacon_de_sap_vet_27_fr.txt':
+                'http://pot-pourri.fltr.ucl.ac.be/files/Aclassftp/textes/BACON/de_sap_vet_27_fr.txt',
+            }
+
+        if url in broken:
+            url = broken[url]
+
+        return url
+
+    def errin(self, url, meta):
+        'Error reporting utility function'
+        return ("%s in\n  %s, %s, %s" %
+                ((url,) + 
+                 tuple(meta[m] for m in ('author', 'work', 'section'))))
+
+    def errback(self, err):
+        'error callback used by all requests'
+        if hasattr(err.value, 'response'):
+            self.log('HTTP error %d %s' % (err.value.response.status,
+                      self.errin(err.value.response.url, err.value.response.meta)),
+                     log.ERROR)
+        else:
+            self.log(err.getErrorMessage(), log.ERROR)
 
     def parse_intro(self, response):
         '''
@@ -88,7 +163,6 @@ class UCLSpider(BaseSpider):
                        and all(len(r.select('td')) in (4, 5)
                                for r in t.select('tr')))]
 
-        requests = []
         # Read the tables row by row
         for a in authors:
             # Columns have this format
@@ -117,35 +191,95 @@ class UCLSpider(BaseSpider):
                                         u'poème', u'poèmes'):
                         chap = ''
 
-                    # correct some erroneous links
-                    if url.startswith('pot-pourri'):
-                        url = 'http://' + url
+                    # select the appropriate callback and url,
+                    # depending on the server
+                    url = self.urlgen(response.url, url)
+                    if url.startswith('http://pot'):
+                        cb = self.parse_txt
+                        enc = 'txt'
+                    else:
+                        cb = self.parse_itinera
+                        enc = 'html'
+                        url = self.urlgen(url, 'lecture/default.htm')
 
-                    # select the appropriate callback, depending on
-                    # the server
-                    req = response.request.replace(url=urljoin(response.url, url),
-                                                   callback=(self.parse_txt 
-                                                             if url.startswith('http://pot')
-                                                             else self.parse_itinera))
+                    req = response.request.replace(url=url, callback=cb)
                     req.meta.update({
                             'author' : auth,
                             'work'   : work,
-                            'section': chap
+                            'section': chap,
+                            'enc'    : enc
                             })
-                    requests.append(req)
 
-        return requests
+                    yield req
+
+    def parse_itinera(self, response):
+        'Parse TOCs on itinera and oδoι'
+
+        hxs = HtmlXPathSelector(response)
+        # Get all links
+        links = hxs.select('//a')
+        try:
+            # Find the beginning of the footer, and extract source link
+            hrefs = links.select('@href').extract()
+            try:
+                bottom = hrefs.index('../consult.cfm')
+            except ValueError:
+                bottom = hrefs.index(
+                    'http://mercure.fltr.ucl.ac.be/Hodoi/concordances/recherche/default.htm')
+            source = links[bottom + hrefs[bottom:].index('../default.htm') + 1].select('@href').extract()[0]
+        except ValueError, IndexError:
+            self.log('Cannot parse footer at ' 
+                     + self.errin(response.url, response.meta),
+                     log.ERROR)
+        else:
+            # Crawl all links before the footer
+            for a in links[:bottom]:
+                url = a.select('@href').extract()
+                if url:
+                    url = self.urlgen(response.url, url[0])
+                    # Only follow links to itinera and oδoι
+                    # (Suetonius' De Vita Cæsarum deserves special treatement...)
+                    if (url.startswith('http://agoraclass')
+                        or url.startswith('http://mercure')
+                        or url.startswith('http://bcs.fltr.ucl.ac.be/SUET/')):
+                        req = response.request.replace(url=url, callback=self.parse_txt)
+                        req.meta['section'] += ', '*bool(req.meta['section']) + self.stringify(a.select('.//text()'))
+                        req.meta['source'] = source
+                        yield req
+                    else:
+                        self.log('Not following '
+                                 + self.errin(url, response.meta),
+                                 log.INFO)
 
     def parse_txt(self, response):
-        'Parse txt files found on pot-pourri'
+        'Parse texts and hypertexts'
+
+        # gather metadata
         item = ScalpoItem()
         item['url'] = response.url
         meta = [(x, response.meta[x]) for x in ('category', 'author', 'work', 'section')]
         item.update(meta)
         item['title'] = ', '.join(map(lambda (_,x) : x, meta[1:]))
-        item['text'] = response.body_as_unicode()
+
+        # scrap text, depending on file format
+        if response.meta['enc'] == 'txt':
+            item['text'] = response.body_as_unicode()
+            item['source'] = 'http://bcs.fltr.ucl.ac.be/'
+        else:
+            item['source'] = response.meta['source']
+            hxs = HtmlXPathSelector(response)
+            # Suetonius deserves special treatement, we just grab everything
+            if response.url.startswith('http://bcs.fltr.ucl.ac.be/SUET/'):
+                text = hxs.select('//body')
+            # For all the others, we have a rather precise idea of the
+            # page structure
+            else:
+                text = hxs.select('//body/center')
+                if len(text) != 2:
+                    self.log('Found odd structure at '
+                             + self.errin(response.url, response.meta),
+                             log.WARNING)
+            item['text'] = self.stringify(text.select('.//text()'))
         return item
 
-    def parse_itinera(self, response):
-        'Parse per-section pages on itinera and oδoι'
-        pass
+
