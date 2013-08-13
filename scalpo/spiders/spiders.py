@@ -59,7 +59,7 @@ class UCLSpider(BaseSpider):
     # mercure: server for oδoι
     # pot-pourri: server for non hypertext
     allowed_domains = [server + '.fltr.ucl.ac.be' 
-                       for server in ('agoraclass', 'mercure', 'pot-pourri')]
+                       for server in ('agoraclass', 'mercure', 'pot-pourri', 'bcs')]
 
     def start_requests(self):
         'The two start pages'
