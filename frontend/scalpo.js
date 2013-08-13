@@ -33,6 +33,58 @@ $(function() {
 	$('#query').val(e.originalEvent.state.query);
     });
     
+    // Author list widget
+    $.ajax({
+	url: scalpo.config.url + '/' + scalpo.config.core + '/select',
+	data: {
+	    'q'          : '*:*',
+	    'wt'         : 'json',
+	    'rows'       : 0,
+	    'hl'         : false,
+	    'facet'      : true,
+	    'facet.field': 'author',
+	    'facet.limit': -1,
+	    'facet.sort' : 'count'
+	},
+	dataType: 'jsonp',
+	jsonp: 'json.wrf',
+	success: function(data) {
+	    // The author list is a horrible list of alterning author
+	    // and frequencies. This variable is used as an
+	    // accumulator in `$.map` below.
+	    var author;
+	    $('#author-list')
+		.empty()
+		.append($.map(data.facet_counts.facet_fields.author, function(f, i) {
+		    if (i % 2 == 0)
+			author = f;
+		    else
+			return ('<option value="' + author + '">' + author 
+				+ ' (' + f + ')' + '</option>');
+		}));
+	},
+	timeout: 20000
+    });
+    (function (handler) {
+	$('#author-choser')
+	    .on('click.scalpo', 'button', handler)
+	    .on('keypress.scalpo', 'input', handler);
+    })(function (e) {
+	console.log(e.which, e)
+	if (e.type == 'click') {
+	    mod = this.id == 'author+' ? '+' : '-';
+	} else {
+	    mod = String.fromCharCode(e.which);
+	    if (mod == '+' || mod == '-')
+		e.preventDefault();
+	    else
+		return
+	}
+	auth = $(this).parent().find('input').val();
+	if (auth)
+	    query_update(mod, 'author', '"' + auth + '"');
+    });
+
     // Query launchers
     $('#select').on('click.scalpo', function() { query(0) });
     
@@ -60,8 +112,7 @@ $(function() {
 	.on('click.scalpo', '.popup li', function(e) {
 	    var mod = this.className == 'popup-less' ? '-' : '+';
 	    popup = $(this).parent().parent()
-	    $q = $('#query');
-	    $q.val($q.val() + ' ' + mod + popup.data('key') + ':"' + popup.data('val') + '"');
+	    query_update(mod, popup.data('key'), '"' + popup.data('val') + '"');
 	    popup.hide();
 	})
     // toggle snippet
@@ -71,8 +122,19 @@ $(function() {
 		.parent().parent().find('.snippet').toggle('fast');
 	});
 
-    var semaphore = false;
+    // Function to add text to the query
+    function query_update(q1, q2, q3) {
+	if (q3 !== undefined)
+	    q = q1 + q2 + ':' + q3
+	else if (q2 !== undefined)
+	    q = q2 + ':' + q3
+	else
+	    q = q1
+	    $q = $('#query');
+	    $q.val($q.val() + ' ' + q);
+    }
 
+    var semaphore = false;
     function query (start) {
 	if (!semaphore) {
 	    semaphore = true;

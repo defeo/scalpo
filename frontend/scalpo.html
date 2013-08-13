@@ -50,6 +50,16 @@
         to { -webkit-transform: rotate(360deg) }
       }
 
+      #author-choser {
+        display: inline-block;
+        text-align: center;
+        margin: 0 3em;
+      }
+      #author-choser button {
+        font-size: 110%;
+        margin: 0 1ex;
+      }
+
       #msg { color: red }
 
       #result-area { padding: 1ex }
@@ -143,6 +153,12 @@
 	     src="https://cdn1.iconfinder.com/data/icons/free-mobile-icon-kit/32/Loading_throbber.png">
 	<span>Search!</span>
       </button>
+      <div id="author-choser">
+	<input id="author" list="author-list" placeholder="Restrict authors (by word)">
+	<datalist id="author-list"></datalist><br>
+	<button id="author+">+</button>
+	<button id="author-">–</button>
+      </div>
       <div id="msg"></div>
     </div>
     
