@@ -40,6 +40,8 @@
     <field name="author"    type="text_general"    indexed="true"  stored="true"  multiValued="false" />
     <field name="work"      type="text_general"    indexed="true"  stored="true"  multiValued="false" />
     <field name="category"  type="text_general"    indexed="true"  stored="true"  multiValued="false" />
+    <field name="section"   type="text_general"    indexed="true"  stored="true"  multiValued="false" />
+    <field name="source"    type="url"             indexed="true"  stored="true"  multiValued="false" />
     <field name="_version_" type="long"            indexed="true"  stored="true"/>
   </fields>
 
