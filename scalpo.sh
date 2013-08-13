@@ -4,13 +4,14 @@ host=${HOST:-localhost}
 port=${PORT:-8080}
 jettyhome=${JETTYHOME:-jetty}
 solrhome=${SOLRHOME:-$PWD}
+opt=$OPTIONS
 
 case "$1" in
     jetty)
-	cd $jettyhome && java -Djetty.port=$port -Dsolr.solr.home="$solrhome/solr" -jar start.jar
+	cd $jettyhome && java -Djetty.port=$port -Dsolr.solr.home="$solrhome/solr" $opt -jar start.jar
 	;;
     crawl)
-	scrapy crawl "$2" -o "$2.json" -t json
+	scrapy crawl "$2" -o "$2.json" -t json $opt
 	;;
     index)
 	curl "http://$host:$port/solr/scalpo/update?wt=json" --data-binary @"$2.json" -H 'Content-type:application/json'
